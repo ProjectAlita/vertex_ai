@@ -1,0 +1,21 @@
+{% set integration_name = 'vertex_ai' %}
+{% set display_name = 'Vertex AI' %}
+{% set section_name = section_name | default('ai') %}
+
+<add-integration-button
+        integration_name="{{ integration_name }}"
+        display_name="{{ display_name }}"
+>
+    <img class="w-5 h-5" src="{{ url_for('%s.static' | format(integration_name), filename='logo.svg') }}"/>
+</add-integration-button>
+
+
+<vertex-ai-integration
+        instance_name="{{ integration_name }}"
+        @register="register"
+        display_name="{{ display_name }}"
+        section_name="{{ section_name }}"
+        @update="custom_data.handle_integrations_update"
+        logo_src="{{ url_for('%s.static' | format(integration_name), filename='logo_white.svg') }}"
+></vertex-ai-integration>
+
