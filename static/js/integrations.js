@@ -173,7 +173,7 @@ const VertexAiIntegration = {
         },
         delete() {
             this.is_fetching = true
-            fetch(this.api_url + this.id, {
+            fetch(this.api_url + this.$root.project_id + '/' + this.id, {
                 method: 'DELETE',
             }).then(response => {
                 this.is_fetching = false
@@ -228,7 +228,7 @@ const VertexAiIntegration = {
             error: {},
             id: null,
             pluginName: 'vertex_ai',
-            api_url: V.build_api_url('integrations', 'integration') + '/',
+            api_url: V.build_api_url('integrations', 'integration', {trailing_slash: true}),
             status: integration_status.success,
             mode: V.mode
         })
