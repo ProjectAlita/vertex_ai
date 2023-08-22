@@ -3,7 +3,7 @@ from pylon.core.tools import web
 import json
 
 from tools import rpc_tools
-from ..models.integration_pd import IntegrationModel
+from ..models.integration_pd import IntegrationModel, VertexAISettings
 from pydantic import ValidationError
 import vertexai
 from google.oauth2.service_account import Credentials
@@ -44,7 +44,6 @@ class RPC:
                 top_k=settings.top_k,
                 top_p=settings.top_p,
             )
-            log.info(f"Response from Model: {response.text}")
             result = response.text
         except Exception as e:
             log.error(str(e))
@@ -52,3 +51,12 @@ class RPC:
     
         return {"ok": True, "response": result}
 
+    
+    @web.rpc(f'{integration_name}__parse_settings')
+    @rpc_tools.wrap_exceptions(RuntimeError)
+    def parse_settings(self, settings):
+        try:
+            settings = VertexAISettings.parse_obj(settings)
+        except ValidationError as e:
+            return {"ok": False, "error": e}
+        return {"ok": True, "item": settings}
