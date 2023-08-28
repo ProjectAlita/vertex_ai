@@ -47,7 +47,7 @@ class RPC:
             result = response.text
         except Exception as e:
             log.error(str(e))
-            return {"ok": False, "error": "Error in connection"}
+            return {"ok": False, "error": f"{str(e)}"}
     
         return {"ok": True, "response": result}
 
