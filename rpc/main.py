@@ -12,12 +12,23 @@ from vertexai.preview.language_models import TextGenerationModel
 from ...integrations.models.pd.integration import SecretField
 
 
+def _prerare_text_prompt(prompt_struct):
+    example_template = '\ninput: {input}\noutput: {output}'
+
+    for example in prompt_struct['examples']:
+        prompt_struct['context'] += example_template.format(**example)
+    if prompt_struct['prompt']:
+        prompt_struct['context'] += example_template.format(input=prompt_struct['prompt'], output='')
+
+    return prompt_struct['context']
+
+
 class RPC:
     integration_name = 'vertex_ai'
 
     @web.rpc(f'{integration_name}__predict')
     @rpc_tools.wrap_exceptions(RuntimeError)
-    def predict(self, project_id, settings, text_prompt):
+    def predict(self, project_id, settings, prompt_struct):
         """ Predict function """
         try:
             settings = IntegrationModel.parse_obj(settings)
@@ -37,6 +48,8 @@ class RPC:
             if settings.tuned_model_name:
                 model = model.get_tuned_model(settings.tuned_model_name)
 
+            text_prompt = _prerare_text_prompt(prompt_struct)
+
             response = model.predict(
                 text_prompt,
                 temperature=settings.temperature,
@@ -48,10 +61,10 @@ class RPC:
         except Exception as e:
             log.error(str(e))
             return {"ok": False, "error": f"{str(e)}"}
-    
+
         return {"ok": True, "response": result}
 
-    
+
     @web.rpc(f'{integration_name}__parse_settings')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def parse_settings(self, settings):
