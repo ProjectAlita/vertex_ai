@@ -8,6 +8,7 @@ from pydantic import ValidationError
 import vertexai
 from google.oauth2.service_account import Credentials
 from vertexai.preview.language_models import TextGenerationModel
+from google.cloud import aiplatform
 
 from ...integrations.models.pd.integration import SecretField
 
@@ -73,3 +74,19 @@ class RPC:
         except ValidationError as e:
             return {"ok": False, "error": e}
         return {"ok": True, "item": settings}
+
+    @web.rpc(f'{integration_name}_set_models', 'set_models')
+    @rpc_tools.wrap_exceptions(RuntimeError)
+    def set_models(self, payload: dict):
+        try:
+            service_account = SecretField.parse_obj(payload['settings'].get('api_token', {}))
+            service_info = json.loads(service_account.unsecret(payload.get('project_id')))
+            credentials = Credentials.from_service_account_info(service_info)
+            aiplatform.init(project=self.project, location=self.zone, credentials=credentials)
+            models = aiplatform.Model.list()
+        except Exception as e:
+            log.error(str(e))
+            models = []
+        if models:
+            models = [m.name for m in models]
+        return models

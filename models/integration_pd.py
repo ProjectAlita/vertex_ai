@@ -8,7 +8,7 @@ from google.oauth2.service_account import Credentials
 from pydantic import BaseModel
 from pylon.core.tools import log
 
-from tools import session_project
+from tools import session_project, rpc_tools
 from ...integrations.models.pd.integration import SecretField
 
 
@@ -25,6 +25,7 @@ class IntegrationModel(BaseModel):
     service_account_info: Union[SecretField, str]
     project: str
     zone: str
+    models: list = []
     model_name: str = 'text-bison@001'
     temperature: float = 1.0
     max_decode_steps: int = 256
@@ -45,3 +46,12 @@ class IntegrationModel(BaseModel):
             log.error(exc)
             return str(exc)
         return True
+
+    def refresh_models(self, project_id):
+        integration_name = 'vertex_ai'
+        payload = {
+            'name': integration_name,
+            'settings': self.dict(),
+            'project_id': project_id
+        }
+        return getattr(rpc_tools.RpcMixin().rpc.call, f'{integration_name}_set_models')(payload)

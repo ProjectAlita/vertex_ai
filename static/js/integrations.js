@@ -2,6 +2,9 @@ const VertexAiIntegration = {
     delimiters: ['[[', ']]'],
     props: ['instance_name', 'display_name', 'logo_src', 'section_name'],
     emits: ['update'],
+    components: {
+        'vertex-ai-models-button': VertexAiModelsButton,
+    },
     template: `
 <div
         :id="modal_id"
@@ -23,8 +26,8 @@ const VertexAiIntegration = {
         <template #body>
             <div class="form-group">
                 <h9>Project</h9>
-                <input type="text" 
-                       v-model="project" 
+                <input type="text"
+                       v-model="project"
                        class="form-control form-control-alternative"
                        placeholder="Project identifier"
                        :class="{ 'is-invalid': error.project }">
@@ -38,7 +41,7 @@ const VertexAiIntegration = {
                  />
                  <label class="mb-1">
                     <span class="btn btn-secondary btn-sm mr-1 d-inline-block">Upload json</span>
-                    <input type="file" accept="application/json" 
+                    <input type="file" accept="application/json"
                     class="form-control form-control-alternative"
                            style="display: none"
                            @change="handleInputFile"
@@ -54,6 +57,24 @@ const VertexAiIntegration = {
                        :class="{ 'is-invalid': error.zone }">
                 <div class="invalid-feedback">[[ error.zone ]]</div>
             </div>
+            <div>
+                <span class="font-h5 font-semibold">Models:</span>
+            </div>
+            <div class="invalid-feedback d-block">[[ error.models ]]</div>
+            <div>
+                <button class="btn btn btn-painted mr-1 rounded-pill mb-1" v-for="model in models"
+                    >[[ model ]]
+                </button>
+            </div>
+            <vertex-ai-models-button
+                ref="VertexAiModelsButton"
+                :pluginName="pluginName"
+                :error="error.check_connection"
+                :body_data="body_data"
+                v-model:models="models"
+                @handleError="handleError"
+            >
+            </vertex-ai-models-button>
         </template>
         <template #footer>
             <test-connection-button
@@ -77,6 +98,11 @@ const VertexAiIntegration = {
             this.clear()
         })
     },
+    // watch: {
+    //     project(newState, oldState) {
+    //         this.models = []
+    //     }
+    // },
     computed: {
         project_id() {
             return getSelectedProjectId()
@@ -86,6 +112,7 @@ const VertexAiIntegration = {
                 zone,
                 project,
                 service_account_info,
+                models,
                 project_id,
                 config,
                 is_default,
@@ -96,6 +123,7 @@ const VertexAiIntegration = {
                 zone,
                 project,
                 service_account_info,
+                models,
                 project_id,
                 config,
                 is_default,
@@ -113,6 +141,7 @@ const VertexAiIntegration = {
     methods: {
         clear() {
             Object.assign(this.$data, this.initialState())
+            this.$refs.VertexAiModelsButton.clear();
         },
         load(stateData) {
             Object.assign(this.$data, stateData)
@@ -127,6 +156,7 @@ const VertexAiIntegration = {
             this.delete()
         },
         create() {
+            if (this.has_validation_error()) return;
             this.is_fetching = true
             fetch(this.api_url + this.pluginName, {
                 method: 'POST',
@@ -156,6 +186,7 @@ const VertexAiIntegration = {
             }
         },
         update() {
+            if (this.has_validation_error()) return;
             this.is_fetching = true
             fetch(this.api_url + this.id, {
                 method: 'PUT',
@@ -183,8 +214,8 @@ const VertexAiIntegration = {
                 } else {
                     this.handleError(response)
                     alertMain.add(`
-                        Deletion error. 
-                        <button class="btn btn-primary" 
+                        Deletion error.
+                        <button class="btn btn-primary"
                             onclick="vueVm.registered_components.${this.instance_name}.modal.modal('show')"
                         >
                             Open modal
@@ -192,6 +223,15 @@ const VertexAiIntegration = {
                     `)
                 }
             })
+        },
+        is_empty_field(value) {
+            return value.length === 0
+        },
+        has_validation_error() {
+            if (this.is_empty_field(this.models)) {
+                this.error.models = 'At least one model is required'
+                return true
+            }
         },
         handleInputFile(event) {
             const input = event.target
@@ -222,6 +262,7 @@ const VertexAiIntegration = {
             project: "",
             test_key: 0,
             service_account_info: "",
+            models: [],
             is_default: false,
             is_fetching: false,
             config: {},
