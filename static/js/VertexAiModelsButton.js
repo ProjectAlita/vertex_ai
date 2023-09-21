@@ -46,8 +46,12 @@ const VertexAiModelsButton = {
                         :list_items="allModels"
                     ></multiselect-dropdown>
                 </div>
+                <div class="invalid-feedback d-block" v-if="!!(models)">
+                    Ensure the service account used for the credentials has the necessary IAM permissions to list the models in the project.
+                    In case you have no permissions, you can add models manually.
+                </div>
             </div>
-            <p class="font-h5 font-semibold mt-3">Add model names manually:</p>
+            <p class="font-h5 font-semibold mt-3">Add model names:</p>
             <div class="input-group d-flex mt-1">
                 <div class="custom-input flex-grow-1">
                     <input type="text" placeholder="Model name" class="form-control form-control-alternative"
@@ -95,7 +99,7 @@ const VertexAiModelsButton = {
                 this.allModels = res.map(model => ({
                     name: model.name,
                 }));
-                this.selected_models = res.filter(model => this.models.includes(model.model)).map(model => model.model);
+                // this.selected_models = res.filter(model => this.models.includes(model.model)).map(model => model.model);
             })
         },
         clearModels() {

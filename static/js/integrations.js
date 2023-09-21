@@ -25,21 +25,25 @@ const VertexAiIntegration = {
     >
         <template #body>
             <div class="form-group">
-                <h9>Project</h9>
-                <input type="text"
+                <div>
+                    <span class="font-h5 font-semibold">Project</span>
+                </div>
+                <input class="mb-4" type="text"
                        v-model="project"
                        class="form-control form-control-alternative"
                        placeholder="Project identifier"
                        :class="{ 'is-invalid': error.project }">
                 <div class="invalid-feedback">[[ error.project ]]</div>
                 <div>
-                <h9>Service account</h9>
+                <div>
+                    <span class="font-h5 font-semibold">Service account</span>
+                </div>
                  <SecretFieldInput
                         ref="secretField"
                         v-model="service_account_info"
                         placeholder="Service account info"
                  />
-                 <label class="mb-1">
+                 <label class="mb-2 mt-1">
                     <span class="btn btn-secondary btn-sm mr-1 d-inline-block">Upload json</span>
                     <input type="file" accept="application/json"
                     class="form-control form-control-alternative"
@@ -50,7 +54,9 @@ const VertexAiIntegration = {
                 </label>
                 <div class="invalid-feedback">[[ error.service_account_info ]]</div>
                 </div>
-                <h9>Zone</h9>
+                <div>
+                    <span class="font-h5 font-semibold">Zone</span>
+                </div>
                 <input type="text" class="form-control form-control-alternative"
                        v-model="zone"
                        placeholder="VertexAi zone"
