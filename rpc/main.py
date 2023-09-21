@@ -88,5 +88,13 @@ class RPC:
             log.error(str(e))
             models = []
         if models:
-            models = [m.name for m in models]
+            models = [{
+                'id': m.resource_name,
+                'name': m.name,
+                'display_name': m.display_name,
+                'description': m.description,
+                'created_at': m.create_time,
+                'updated_at': m.update_time,
+                'version_id': m.version_id,
+            } for m in models]
         return models

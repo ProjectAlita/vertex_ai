@@ -93,7 +93,7 @@ const VertexAiModelsButton = {
             this.is_loading_models = true
             this.loadModelsAPI(this.pluginName, this.body_data).then(res => {
                 this.allModels = res.map(model => ({
-                    name: model.id,
+                    name: model.name,
                 }));
                 this.selected_models = res.filter(model => this.models.includes(model.model)).map(model => model.model);
             })
