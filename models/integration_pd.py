@@ -1,9 +1,7 @@
 import json
-from enum import Enum
 from json import JSONDecodeError
 from typing import Union
 
-from google.cloud import aiplatform
 from google.oauth2.service_account import Credentials
 from pydantic import BaseModel
 from pylon.core.tools import log
@@ -34,6 +32,7 @@ class IntegrationModel(BaseModel):
     tuned_model_name: str = ''
 
     def check_connection(self):
+        from google.cloud import aiplatform
         try:
             service_info = json.loads(
                 self.service_account_info.unsecret(session_project.get()))

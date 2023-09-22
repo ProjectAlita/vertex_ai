@@ -3,13 +3,11 @@ from pylon.core.tools import web
 import json
 
 from tools import rpc_tools
-from ..models.integration_pd import IntegrationModel, VertexAISettings
 from pydantic import ValidationError
-import vertexai
-from google.oauth2.service_account import Credentials
-from vertexai.preview.language_models import TextGenerationModel
-from google.cloud import aiplatform
 
+from google.oauth2.service_account import Credentials
+
+from ..models.integration_pd import IntegrationModel, VertexAISettings
 from ...integrations.models.pd.integration import SecretField
 
 
@@ -31,6 +29,9 @@ class RPC:
     @rpc_tools.wrap_exceptions(RuntimeError)
     def predict(self, project_id, settings, prompt_struct):
         """ Predict function """
+        import vertexai
+        from vertexai.preview.language_models import TextGenerationModel
+
         try:
             settings = IntegrationModel.parse_obj(settings)
         except ValidationError as e:
@@ -65,7 +66,6 @@ class RPC:
 
         return {"ok": True, "response": result}
 
-
     @web.rpc(f'{integration_name}__parse_settings')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def parse_settings(self, settings):
@@ -78,6 +78,7 @@ class RPC:
     @web.rpc(f'{integration_name}_set_models', 'set_models')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def set_models(self, payload: dict):
+        from google.cloud import aiplatform
         try:
             service_account = SecretField.parse_obj(payload['settings'].get('api_token', {}))
             service_info = json.loads(service_account.unsecret(payload.get('project_id')))
