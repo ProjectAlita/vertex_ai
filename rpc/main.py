@@ -1,25 +1,18 @@
-from pylon.core.tools import log  # pylint: disable=E0611,E0401
-from pylon.core.tools import web
+from importlib import reload
+from traceback import format_exc
+
+from pylon.core.tools import web, log
 import json
 
 from tools import rpc_tools
 from pydantic import ValidationError
 
 from google.oauth2.service_account import Credentials
+from google.cloud import aiplatform
 
-from ..models.integration_pd import IntegrationModel, VertexAISettings
+from ..models.integration_pd import VertexAISettings
+from ..utils import predict_chat, predict_text
 from ...integrations.models.pd.integration import SecretField
-
-
-def _prerare_text_prompt(prompt_struct):
-    example_template = '\ninput: {input}\noutput: {output}'
-
-    for example in prompt_struct['examples']:
-        prompt_struct['context'] += example_template.format(**example)
-    if prompt_struct['prompt']:
-        prompt_struct['context'] += example_template.format(input=prompt_struct['prompt'], output='')
-
-    return prompt_struct['context']
 
 
 class RPC:
@@ -27,42 +20,18 @@ class RPC:
 
     @web.rpc(f'{integration_name}__predict')
     @rpc_tools.wrap_exceptions(RuntimeError)
-    def predict(self, project_id, settings, prompt_struct):
+    def predict(self, project_id: int, settings: dict, prompt_struct: dict):
         """ Predict function """
-        import vertexai
-        from vertexai.preview.language_models import TextGenerationModel
-
         try:
-            settings = IntegrationModel.parse_obj(settings)
-        except ValidationError as e:
-            return {"ok": False, "error": e}
-
-        try:
-            service_account = SecretField.parse_obj(settings.service_account_info)
-            service_info = json.loads(service_account.unsecret(project_id))
-            credentials = Credentials.from_service_account_info(service_info)
-            vertexai.init(
-                project=settings.project,
-                location=settings.zone,
-                credentials=credentials
-            )
-            model = TextGenerationModel.from_pretrained(settings.model_name)
-            if settings.tuned_model_name:
-                model = model.get_tuned_model(settings.tuned_model_name)
-
-            text_prompt = _prerare_text_prompt(prompt_struct)
-
-            response = model.predict(
-                text_prompt,
-                temperature=settings.temperature,
-                max_output_tokens=settings.max_decode_steps,
-                top_k=settings.top_k,
-                top_p=settings.top_p,
-            )
-            result = response.text
+            if settings['model_name'].startswith('chat'):
+                log.info('Using chat prediction for model: %s', settings['model_name'])
+                result = predict_chat(project_id, settings, prompt_struct)
+            else:
+                log.info('Using completion(text) prediction for model: %s', settings['model_name'])
+                result = predict_text(project_id, settings, prompt_struct)
         except Exception as e:
-            log.error(str(e))
-            return {"ok": False, "error": f"{str(e)}"}
+            log.error(format_exc())
+            return {"ok": False, "error": f"{type(e)}: {str(e)}"}
 
         return {"ok": True, "response": result}
 
@@ -78,7 +47,7 @@ class RPC:
     @web.rpc(f'{integration_name}_set_models', 'set_models')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def set_models(self, payload: dict):
-        from google.cloud import aiplatform
+        reload(aiplatform.initializer)
         try:
             service_account = SecretField.parse_obj(payload['settings'].get('api_token', {}))
             service_info = json.loads(service_account.unsecret(payload.get('project_id')))

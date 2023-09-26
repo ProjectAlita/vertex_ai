@@ -1,3 +1,4 @@
 pydantic
 google-cloud-aiplatform
 google-auth
+vertexai
