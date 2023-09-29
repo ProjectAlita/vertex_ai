@@ -25,7 +25,8 @@ class RPC:
         try:
             if settings['model_name'].startswith('chat'):
                 log.info('Using chat prediction for model: %s', settings['model_name'])
-                result = predict_chat(project_id, settings, prompt_struct)
+                stream = settings.get('stream')
+                result = predict_chat(project_id, settings, prompt_struct, stream)
             else:
                 log.info('Using completion(text) prediction for model: %s', settings['model_name'])
                 result = predict_text(project_id, settings, prompt_struct)

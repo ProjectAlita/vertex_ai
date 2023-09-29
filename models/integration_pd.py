@@ -15,7 +15,7 @@ class CapabilitiesModel(BaseModel):
     chat_completion: bool = True
     embeddings: bool = True
 
-
+      
 class AIModel(BaseModel):
     id: str
     name: str
@@ -73,3 +73,4 @@ class VertexAISettings(BaseModel):
     top_p: float = 0.8
     top_k: int = 40
     tuned_model_name: str = ''
+    stream: bool = False

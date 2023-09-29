@@ -1,4 +1,5 @@
 import json
+from functools import reduce
 from importlib import reload
 
 from .models.integration_pd import IntegrationModel
@@ -24,12 +25,19 @@ def init_vertex(project_id: int, settings: IntegrationModel) -> None:
     )
 
 
-def predict_chat(project_id: int, settings: dict, prompt_struct: dict) -> str:
+def predict_chat(project_id: int, settings: dict, prompt_struct: dict, stream=False) -> str:
     settings = IntegrationModel.parse_obj(settings)
 
     init_vertex(project_id, settings)
 
     chat_model = ChatModel.from_pretrained(settings.model_name)
+    params = {
+        "temperature": settings.temperature,
+        "top_k":settings.top_k,
+        "top_p":settings.top_p,
+    }
+    if not stream:
+        params["max_output_tokens"] = settings.max_decode_steps
 
     chat = chat_model.start_chat(
         context=prompt_struct['context'],
@@ -40,19 +48,18 @@ def predict_chat(project_id: int, settings: dict, prompt_struct: dict) -> str:
             ),
             prompt_struct['examples']
         )),
-        temperature=settings.temperature,
-        max_output_tokens=settings.max_decode_steps,
-        top_k=settings.top_k,
-        top_p=settings.top_p,
-
+        **params
     )
     # todo: push some context to chat history with ChatMessage class
     # chat.message_history
-    chat_response: TextGenerationResponse = chat.send_message(prompt_struct['prompt'])
-
-    log.info('chat_response %s', chat_response)
-
-    return chat_response.text
+    if stream:
+        responses = chat.send_message_streaming(prompt_struct['prompt'])
+        result = reduce(lambda x, y: x + y.text , responses, "")
+        return result
+    else:
+        chat_response: TextGenerationResponse = chat.send_message(prompt_struct['prompt'])
+        log.info('chat_response %s', chat_response)
+        return chat_response.text
 
 
 def _prerare_text_prompt(prompt_struct):
