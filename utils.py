@@ -94,3 +94,12 @@ def predict_text(project_id: int, settings: dict, prompt_struct: dict) -> str:
 
     log.info('completion_response %s', response)
     return response.text
+
+
+def prepare_result(text):
+    structured_result = {'messages': []}
+    structured_result['messages'].append({
+        'type': 'text',
+        'content': text
+    })
+    return structured_result

@@ -1,4 +1,3 @@
-pydantic
 google-cloud-aiplatform==1.33.1
 google-auth
 vertexai

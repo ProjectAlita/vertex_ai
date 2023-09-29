@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 from google.cloud import aiplatform
 
 from ..models.integration_pd import VertexAISettings
-from ..utils import predict_chat, predict_text
+from ..utils import predict_chat, predict_text, prepare_result
 from ...integrations.models.pd.integration import SecretField
 
 
@@ -34,7 +34,7 @@ class RPC:
             log.error(format_exc())
             return {"ok": False, "error": f"{type(e)}: {str(e)}"}
 
-        return {"ok": True, "response": result}
+        return {"ok": True, "response": prepare_result(result)}
 
     @web.rpc(f'{integration_name}__parse_settings')
     @rpc_tools.wrap_exceptions(RuntimeError)
