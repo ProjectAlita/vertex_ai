@@ -17,6 +17,7 @@ class VertexAISettings(BaseModel):
     top_p: float = 0.8
     top_k: int = 40
     tuned_model_name: str = ''
+    stream: bool = False
 
 
 class IntegrationModel(BaseModel):
