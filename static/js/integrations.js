@@ -67,11 +67,31 @@ const VertexAiIntegration = {
                 <span class="font-h5 font-semibold">Models:</span>
             </div>
             <div class="invalid-feedback d-block">[[ error.models ]]</div>
-            <div>
-                <button class="btn btn btn-painted mr-1 rounded-pill mb-1" v-for="(model, index) in models"
-                    @click="deleteModel(index)">[[ model.id ]]
-                </button>
-            </div>
+            <table class="w-100 table-transparent mb-2 params-table">
+                <tr v-if="models.length > 0">
+                    <th><span class="font-h5 font-semibold">Name</span></th>
+                    <th><span class="font-h5 font-semibold">Completion</span></th>
+                    <th><span class="font-h5 font-semibold">Chat Completion</span></th>
+                    <th><span class="font-h5 font-semibold">Embeddings</span></th>
+                </tr>
+                <tr v-for="(model, index) in models">
+                    <td>
+                        <span class="font-h5">[[ model.id ]]</span>
+                    </td>
+                    <td>
+                        <input type="checkbox" v-model="model.capabilities.completion">
+                    </td>
+                    <td>
+                        <input type="checkbox" v-model="model.capabilities.chat_completion">
+                    </td>
+                    <td>
+                        <input type="checkbox" v-model="model.capabilities.embeddings">
+                    </td>
+                    <td>
+                        <button class="icon__18x18 icon-delete icon__strict-color mr-2" @click="deleteModel(index)"></button>
+                    </td>
+                </tr>
+            </table>
             <vertex-ai-models-button
                 ref="VertexAiModelsButton"
                 :pluginName="pluginName"
@@ -84,11 +104,11 @@ const VertexAiIntegration = {
         </template>
         <template #footer>
             <test-connection-button
-                    :apiPath="this.$root.build_api_url('integrations', 'check_settings') + '/' + pluginName"
-                    :error="error.check_connection"
-                    :body_data="body_data"
-                    v-model:is_fetching="is_fetching"
-                    @handleError="handleError"
+                :apiPath="this.$root.build_api_url('integrations', 'check_settings') + '/' + pluginName"
+                :error="error.check_connection"
+                :body_data="body_data"
+                v-model:is_fetching="is_fetching"
+                @handleError="handleError"
             >
             </test-connection-button>
         </template>
