@@ -93,3 +93,19 @@ class VertexAISettings(BaseModel):
     top_k: int = 40
     tuned_model_name: str = ''
     stream: bool = False
+
+
+class MessageModel(BaseModel):
+    author: str
+    content: str
+
+    class Config:
+        fields = {
+            'author': 'role'
+        }
+
+    @validator('author')
+    def token_limit_validator(cls, value, values):
+        if value == 'ai':
+            return 'bot'
+        return value

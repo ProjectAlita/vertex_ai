@@ -2,10 +2,10 @@ import json
 from functools import reduce
 from importlib import reload
 
-from .models.integration_pd import IntegrationModel
+from .models.integration_pd import IntegrationModel, MessageModel
 
 import vertexai
-from vertexai.language_models import ChatModel, InputOutputTextPair, TextGenerationModel, TextGenerationResponse
+from vertexai.language_models import ChatModel, InputOutputTextPair, TextGenerationModel, TextGenerationResponse, ChatMessage
 from google.oauth2.service_account import Credentials
 
 from pylon.core.tools import log
@@ -39,6 +39,11 @@ def predict_chat(project_id: int, settings: dict, prompt_struct: dict, stream=Fa
     if not stream:
         params["max_output_tokens"] = settings.max_decode_steps
 
+    if prompt_struct.get('chat_history'):
+        chat_history = list(map(lambda x: ChatMessage(**MessageModel(**x).dict()), prompt_struct['chat_history']))
+    else:
+        chat_history = None
+
     chat = chat_model.start_chat(
         context=prompt_struct['context'],
         examples=list(map(
@@ -48,6 +53,7 @@ def predict_chat(project_id: int, settings: dict, prompt_struct: dict, stream=Fa
             ),
             prompt_struct['examples']
         )),
+        message_history=chat_history,
         **params
     )
     # todo: push some context to chat history with ChatMessage class
