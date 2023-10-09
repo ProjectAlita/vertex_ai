@@ -16,12 +16,55 @@
 #   limitations under the License.
 
 """ Module """
+import json
 from functools import partial
 
 from pylon.core.tools import log  # pylint: disable=E0611,E0401
 from pylon.core.tools import module  # pylint: disable=E0611,E0401
 
+from tools import VaultClient  # pylint: disable=E0611,E0401
+
 from .models.integration_pd import IntegrationModel
+
+
+TOKEN_LIMITS = {
+    'text-bison': {
+        'input': 8192,
+        'output': 1024,
+    },
+    'chat-bison': {
+        'input': 8192,
+        'output': 1024,
+    },
+    'code-bison': {
+        'input': 6144,
+        'output': 1024,
+    },
+    'codechat-bison': {
+        'input': 6144,
+        'output': 1024,
+    },
+    'code-gecko': {
+        'input': 2048,
+        'output': 64,
+    },
+    'text-bison-32k': {
+        'input': 32000,
+        'output': 8192,
+    },
+    'chat-bison-32k': {
+        'input': 32000,
+        'output': 8192,
+    },
+    'code-bison-32k': {
+        'input': 32000,
+        'output': 8192,
+    },
+    'codechat-bison-32k': {
+        'input': 32000,
+        'output': 8192,
+    },
+}
 
 
 class Module(module.ModuleModel):
@@ -52,6 +95,12 @@ class Module(module.ModuleModel):
             section=SECTION_NAME,
             settings_model=IntegrationModel,
         )
+
+        vault_client = VaultClient()
+        secrets = vault_client.get_all_secrets()
+        if 'vertex_ai_token_limits' not in secrets:
+            secrets['vertex_ai_token_limits'] = json.dumps(TOKEN_LIMITS)
+            vault_client.set_secrets(secrets)
 
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """

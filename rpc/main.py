@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from google.oauth2.service_account import Credentials
 from google.cloud import aiplatform
 
-from ..models.integration_pd import VertexAISettings
+from ..models.integration_pd import VertexAISettings, AIModel
 from ..utils import predict_chat, predict_text, prepare_result
 from ...integrations.models.pd.integration import SecretField
 
@@ -21,15 +21,19 @@ class RPC:
     @web.rpc(f'{integration_name}__predict')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def predict(self, project_id: int, settings: dict, prompt_struct: dict):
+        models = settings.get('models', [])
+        capabilities = next((model['capabilities'] for model in models if model['id'] == settings['model_name']), {})
         """ Predict function """
         try:
-            if settings['model_name'].startswith('chat'):
+            if capabilities.get('chat_completion'):
                 log.info('Using chat prediction for model: %s', settings['model_name'])
                 stream = settings.get('stream')
                 result = predict_chat(project_id, settings, prompt_struct, stream)
-            else:
+            elif capabilities.get('completion'):
                 log.info('Using completion(text) prediction for model: %s', settings['model_name'])
                 result = predict_text(project_id, settings, prompt_struct)
+            else:
+                raise Exception(f"Model {settings['model_name']} does not support chat or text completion")
         except Exception as e:
             log.error(format_exc())
             return {"ok": False, "error": f"{type(e)}: {str(e)}"}
@@ -59,13 +63,6 @@ class RPC:
             log.error(str(e))
             models = []
         if models:
-            models = [{
-                'id': m.resource_name,
-                'name': m.name,
-                'display_name': m.display_name,
-                'description': m.description,
-                'created_at': m.create_time,
-                'updated_at': m.update_time,
-                'version_id': m.version_id,
-            } for m in models]
+            models = [{'id': m.resource_name, 'name': m.name} for m in models]
+            models = [AIModel(id=model.name, name=model.name).dict() for model in models]
         return models

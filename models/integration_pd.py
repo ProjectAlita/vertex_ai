@@ -1,13 +1,24 @@
 import json
 from json import JSONDecodeError
-from typing import List, Union
+from typing import List, Optional, Union
 
 from google.oauth2.service_account import Credentials
 from pydantic import BaseModel, root_validator, validator
 from pylon.core.tools import log
 
-from tools import session_project, rpc_tools
+from tools import session_project, rpc_tools, VaultClient
 from ...integrations.models.pd.integration import SecretField
+
+
+def get_token_limits():
+    vault_client = VaultClient()
+    secrets = vault_client.get_all_secrets()
+    return json.loads(secrets.get('vertex_ai_token_limits', ''))
+
+
+class TokenLimitModel(BaseModel):
+    input: int
+    output: int
 
 
 class CapabilitiesModel(BaseModel):
@@ -15,11 +26,19 @@ class CapabilitiesModel(BaseModel):
     chat_completion: bool = True
     embeddings: bool = True
 
-      
+
 class AIModel(BaseModel):
     id: str
     name: str
     capabilities: CapabilitiesModel = CapabilitiesModel()
+    token_limit: Optional[TokenLimitModel]
+
+    @validator('token_limit', always=True, check_fields=False)
+    def token_limit_validator(cls, value, values):
+        if value:
+            return value
+        token_limits = get_token_limits()
+        return token_limits.get(values.get('id').split('@')[0], TokenLimitModel(input=8192, output=1024))
 
 
 class IntegrationModel(BaseModel):
@@ -74,3 +93,19 @@ class VertexAISettings(BaseModel):
     top_k: int = 40
     tuned_model_name: str = ''
     stream: bool = False
+
+
+class MessageModel(BaseModel):
+    author: str
+    content: str
+
+    class Config:
+        fields = {
+            'author': 'role'
+        }
+
+    @validator('author')
+    def token_limit_validator(cls, value, values):
+        if value == 'ai':
+            return 'bot'
+        return value

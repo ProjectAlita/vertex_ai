@@ -62,17 +62,38 @@ const VertexAiModelsButton = {
                     :class="{ 'is-invalid': hasErrors }"
             >
             </div>
-            <div class="flex-grow-1 ml-2">
-                <Multiselect-Dropdown
-                        placeholder="Capabilities"
-                        instance_name="capabilities_select"
-                        :list_items='["completion", "chat_completion", "embeddings"]'
-                        :pre_selected_indexes='[1]'
-                        v-model="capabilities"
-                        container_class="metric_select bootstrap-select__b"
-                ></Multiselect-Dropdown>
+        </div>
+        <div class="input-group d-flex mt-1">
+            <div class="d-flex" style="width: 24%;">
+                <div>
+                    <div class="font-h6 font-semibold" style="white-space: nowrap">Max input tokens:</div>
+                    <input type="number" class="form-control mt-1" placeholder="Token input limit"
+                        v-model="token_limit.input"
+                    >
+                </div>
             </div>
-            <button class="btn btn-lg btn-secondary ml-2" type="button"
+            <div class="d-flex ml-2" style="width: 24%;">
+                <div>
+                    <div class="font-h6 font-semibold" style="white-space: nowrap">Max output tokens:</div>
+                    <input type="number" class="form-control mt-1" placeholder="Token output limit"
+                        v-model="token_limit.output"
+                    >
+                </div>
+            </div>
+            <div class="d-flex flex-grow-1">
+                <div class="flex-grow-1 ml-2">
+                    <div class="font-h6 font-semibold" style="white-space: nowrap">Capabilities:</div>
+                    <Multiselect-Dropdown
+                            placeholder="Capabilities"
+                            instance_name="capabilities_select"
+                            :list_items='["completion", "chat_completion", "embeddings"]'
+                            :pre_selected_indexes='[1]'
+                            v-model:modelValue="capabilities"
+                            container_class="mt-2 metric_select bootstrap-select__b"
+                    ></Multiselect-Dropdown>
+                </div>
+            </div>
+            <button class="btn btn-lg btn-secondary ml-2 mt-3" type="button"
                 @click="handleAdd"
                 :disabled="model === ''"
                 :class="{ 'btn-danger': hasErrors }"
@@ -154,6 +175,10 @@ const VertexAiModelsButton = {
                     completion: this.capabilities.includes('completion'),
                     chat_completion: this.capabilities.includes('chat_completion'),
                     embeddings: this.capabilities.includes('embeddings'),
+                },
+                token_limit: {
+                    'input': this.token_limit.input,
+                    'output': this.token_limit.output,
                 }
             }
             this.selected_models = [...this.models, model];
@@ -175,6 +200,10 @@ const VertexAiModelsButton = {
             is_models_loaded: false,
             selected_models: [],
             capabilities: [],
+            token_limit: {
+                'input': 8096,
+                'output': 1024
+            },
             warnings: [],
         })
     }
