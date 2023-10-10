@@ -1,12 +1,14 @@
 import json
 from functools import reduce
 from importlib import reload
+from collections import deque
 
 from .models.integration_pd import IntegrationModel, MessageModel
 
 import vertexai
 from vertexai.language_models import ChatModel, InputOutputTextPair, TextGenerationModel, TextGenerationResponse, ChatMessage
 from google.oauth2.service_account import Credentials
+import tiktoken
 
 from pylon.core.tools import log
 
@@ -25,6 +27,70 @@ def init_vertex(project_id: int, settings: IntegrationModel) -> None:
     )
 
 
+def num_tokens_from_messages(message: dict | str) -> int:
+    """Return the number of tokens used by messages.
+    """
+
+    encoding = tiktoken.get_encoding("cl100k_base")  # Using cl100k_base encoding
+    tokens_per_message = 4
+    num_tokens = 0
+    if isinstance(message, str):
+        num_tokens = len(encoding.encode(message))
+        num_tokens += tokens_per_message
+        return num_tokens
+    for key, value in message.items():
+        num_tokens += len(encoding.encode(value))
+    # num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    num_tokens += tokens_per_message
+    return num_tokens
+
+
+def prepare_conversation(prompt_struct: dict, token_input_limit: int) -> dict:
+    conversation = {
+        'context': '',
+        'examples': [],
+        'chat_history': deque(),
+        'prompt': ''
+    }
+    tokens_left = token_input_limit
+
+    if prompt_struct.get('context'):
+        context_tokens = num_tokens_from_messages(prompt_struct['context'])
+        tokens_left -= context_tokens
+        if tokens_left < 0:
+            return conversation
+        conversation['context'] = prompt_struct['context']
+
+    if prompt_struct.get('prompt'):
+        input_tokens = num_tokens_from_messages(prompt_struct['prompt'])
+        tokens_left -= input_tokens
+        if tokens_left < 0:
+            return conversation
+        conversation['prompt'] = prompt_struct['prompt']
+
+    if prompt_struct.get('examples'):
+        for example in prompt_struct['examples']:
+            example_tokens = num_tokens_from_messages(example)
+            tokens_left -= example_tokens
+            if tokens_left < 0:
+                return conversation
+            conversation['examples'].append(example)
+
+    if prompt_struct.get('chat_history'):
+        for message in reversed(prompt_struct['chat_history']):
+            formatted_message = MessageModel(**message).dict()
+            message_tokens = num_tokens_from_messages(formatted_message)
+            tokens_left -= message_tokens
+            if tokens_left < 0:
+                break
+            conversation['chat_history'].appendleft(formatted_message)
+
+    if len(conversation['chat_history']) % 2:
+        conversation['chat_history'].popleft()
+
+    return conversation
+
+
 def predict_chat(project_id: int, settings: dict, prompt_struct: dict, stream=False) -> str:
     settings = IntegrationModel.parse_obj(settings)
 
@@ -39,8 +105,11 @@ def predict_chat(project_id: int, settings: dict, prompt_struct: dict, stream=Fa
     if not stream:
         params["max_output_tokens"] = settings.max_decode_steps
 
+    input_token_limit = settings.input_token_limit
+    prompt_struct = prepare_conversation(prompt_struct, input_token_limit)
+
     if prompt_struct.get('chat_history'):
-        chat_history = list(map(lambda x: ChatMessage(**MessageModel(**x).dict()), prompt_struct['chat_history']))
+        chat_history = list(map(lambda x: ChatMessage(**x), prompt_struct['chat_history']))
     else:
         chat_history = None
 
@@ -56,8 +125,6 @@ def predict_chat(project_id: int, settings: dict, prompt_struct: dict, stream=Fa
         message_history=chat_history,
         **params
     )
-    # todo: push some context to chat history with ChatMessage class
-    # chat.message_history
     if stream:
         responses = chat.send_message_streaming(prompt_struct['prompt'])
         result = reduce(lambda x, y: x + y.text , responses, "")
