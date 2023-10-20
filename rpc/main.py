@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 from google.cloud import aiplatform
 
 from ..models.integration_pd import VertexAISettings, AIModel
-from ..utils import predict_chat, predict_text, prepare_result
+from ..utils import predict_chat, predict_from_request, predict_text, prepare_result, predict_chat_from_request
 from ...integrations.models.pd.integration import SecretField
 
 
@@ -39,6 +39,32 @@ class RPC:
             return {"ok": False, "error": f"{type(e)}: {str(e)}"}
 
         return {"ok": True, "response": prepare_result(result)}
+
+    @web.rpc(f'{integration_name}__chat_completion')
+    @rpc_tools.wrap_exceptions(RuntimeError)
+    def chat_completion(self, project_id, settings, request_data):
+        """ Chat completion function """
+        try:
+            result = predict_chat_from_request(project_id, settings, request_data)
+
+        except Exception as e:
+            log.error(format_exc())
+            return {"ok": False, "error": f"{type(e)}: {str(e)}"}
+
+        return {"ok": True, "response": result}
+
+    @web.rpc(f'{integration_name}__completion')
+    @rpc_tools.wrap_exceptions(RuntimeError)
+    def completion(self, project_id, settings, request_data):
+        """ Completion function """
+        try:
+            result = predict_from_request(project_id, settings, request_data)
+
+        except Exception as e:
+            log.error(format_exc())
+            return {"ok": False, "error": f"{type(e)}: {str(e)}"}
+
+        return {"ok": True, "response": result}
 
     @web.rpc(f'{integration_name}__parse_settings')
     @rpc_tools.wrap_exceptions(RuntimeError)
