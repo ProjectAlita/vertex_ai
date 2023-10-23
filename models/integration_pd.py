@@ -64,6 +64,9 @@ class IntegrationModel(BaseModel):
     def input_token_limit(self):
         return next((model.token_limit.input for model in self.models if model.id == self.model_name), 1024)
 
+    def get_input_token_limit(self, model_name):
+        return next((model.token_limit.input for model in self.models if model.id == model_name), 1024)
+
     def check_connection(self):
         from google.cloud import aiplatform
         try:
