@@ -67,11 +67,11 @@ class IntegrationModel(BaseModel):
     def get_input_token_limit(self, model_name):
         return next((model.token_limit.input for model in self.models if model.id == model_name), 1024)
 
-    def check_connection(self):
+    def check_connection(self, project_id):
         from google.cloud import aiplatform
         try:
             service_info = json.loads(
-                self.service_account_info.unsecret(session_project.get()))
+                self.service_account_info.unsecret(project_id))
             credentials = Credentials.from_service_account_info(service_info)
             aiplatform.init(project=self.project, location=self.zone, credentials=credentials)
             aiplatform.Model.list()
