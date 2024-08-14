@@ -22,7 +22,7 @@ from functools import partial
 from pylon.core.tools import log  # pylint: disable=E0611,E0401
 from pylon.core.tools import module  # pylint: disable=E0611,E0401
 
-from tools import VaultClient  # pylint: disable=E0611,E0401
+from tools import VaultClient, worker_client  # pylint: disable=E0611,E0401
 
 from .models.integration_pd import IntegrationModel
 
@@ -78,14 +78,10 @@ class Module(module.ModuleModel):
         """ Init module """
         log.info("Initializing module Vertex AI Integration")
         SECTION_NAME = 'ai'
-
-        self.descriptor.init_blueprint()
-        self.descriptor.init_slots()
-        self.descriptor.init_rpcs()
-        self.descriptor.init_api()
-
+        #
+        self.descriptor.init_all()
+        #
         # Register template slot callback
-
         self.context.rpc_manager.call.integrations_register_section(
             name=SECTION_NAME,
             integration_description='Manage ai integrations',
@@ -95,13 +91,34 @@ class Module(module.ModuleModel):
             section=SECTION_NAME,
             settings_model=IntegrationModel,
         )
-
+        #
         vault_client = VaultClient()
         secrets = vault_client.get_all_secrets()
         if 'vertex_ai_token_limits' not in secrets:
             secrets['vertex_ai_token_limits'] = json.dumps(TOKEN_LIMITS)
             vault_client.set_secrets(secrets)
+        #
+        worker_client.register_integration(
+            integration_name=self.descriptor.name,
+            #
+            ai_check_settings_callback=self.ai_check_settings,
+            ai_get_models_callback=self.ai_get_models,
+            ai_count_tokens_callback=self.count_tokens,
+            #
+            llm_invoke_callback=self.llm_invoke,
+            llm_stream_callback=self.llm_stream,
+            #
+            chat_model_invoke_callback=self.chat_model_invoke,
+            chat_model_stream_callback=self.chat_model_stream,
+            #
+            embed_documents_callback=self.embed_documents,
+            embed_query_callback=self.embed_query,
+            #
+            indexer_config_callback=self.indexer_config,
+        )
 
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """
         log.info("De-initializing GCP Integration")
+        #
+        self.descriptor.deinit_all()

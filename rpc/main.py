@@ -4,7 +4,7 @@ from traceback import format_exc
 from pylon.core.tools import web, log
 import json
 
-from tools import rpc_tools
+from tools import rpc_tools, worker_client, this
 from pydantic import ValidationError
 
 from google.oauth2.service_account import Credentials
@@ -78,17 +78,24 @@ class RPC:
     @web.rpc(f'{integration_name}_set_models', 'set_models')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def set_models(self, payload: dict):
-        reload(aiplatform.initializer)
-        try:
-            service_account = SecretField.parse_obj(payload['settings'].get('api_token', {}))
-            service_info = json.loads(service_account.unsecret(payload.get('project_id')))
-            credentials = Credentials.from_service_account_info(service_info)
-            aiplatform.init(project=self.project, location=self.zone, credentials=credentials)
-            models = aiplatform.Model.list()
-        except Exception as e:
-            log.error(str(e))
-            models = []
-        if models:
-            models = [{'id': m.resource_name, 'name': m.name} for m in models]
-            models = [AIModel(id=model.name, name=model.name).dict() for model in models]
-        return models
+        api_token = payload['settings'].get('service_account_info', {})
+        #
+        if isinstance(api_token, SecretField):
+            token_field = api_token
+        else:
+            token_field = SecretField.parse_obj(api_token)
+        #
+        api_token = token_field.unsecret(payload.get('project_id'))
+        #
+        settings = {
+            "project": payload['settings']['project'],
+            "zone": payload['settings']['zone'],
+            "service_account_info": api_token,
+        }
+        #
+        raw_models = worker_client.ai_get_models(
+            integration_name=this.module_name,
+            settings=settings,
+        )
+        #
+        return [AIModel(**model).dict() for model in raw_models]

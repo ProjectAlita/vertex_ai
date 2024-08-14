@@ -1,12 +1,10 @@
 import json
-from json import JSONDecodeError
 from typing import List, Optional, Union
 
-from google.oauth2.service_account import Credentials
 from pydantic import BaseModel, root_validator, validator
 from pylon.core.tools import log
 
-from tools import session_project, rpc_tools, VaultClient
+from tools import session_project, rpc_tools, VaultClient, worker_client, this
 from ...integrations.models.pd.integration import SecretField
 
 
@@ -68,21 +66,16 @@ class IntegrationModel(BaseModel):
         return next((model.token_limit.input for model in self.models if model.id == model_name), 1024)
 
     def check_connection(self, project_id=None):
-        from google.cloud import aiplatform
         if not project_id:
             project_id = session_project.get()
-        try:
-            service_info = json.loads(
-                self.service_account_info.unsecret(project_id))
-            credentials = Credentials.from_service_account_info(service_info)
-            aiplatform.init(project=self.project, location=self.zone, credentials=credentials)
-            aiplatform.Model.list()
-        except JSONDecodeError:
-            return "Failed to decode service account info"
-        except Exception as exc:
-            log.error(exc)
-            return str(exc)
-        return True
+        #
+        settings = self.dict()
+        settings["service_account_info"] = self.service_account_info.unsecret(project_id)
+        #
+        return worker_client.ai_check_settings(
+            integration_name=this.module_name,
+            settings=settings,
+        )
 
     def refresh_models(self, project_id):
         integration_name = 'vertex_ai'
