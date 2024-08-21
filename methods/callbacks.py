@@ -463,8 +463,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                     "target_kwargs": {
                         "model": model,
                         #
-                        # "temperature": settings["settings"]["temperature"],
-                        # "max_tokens": settings["settings"]["max_tokens"],  # or max_decode_steps ?
+                        "temperature": settings["settings"]["temperature"],
+                        "max_tokens": settings["settings"]["max_tokens"],  # or max_decode_steps ?
                     },
                 },
             }
@@ -481,8 +481,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_kwargs": {
                     "model": model,
                     #
-                    # "temperature": settings["settings"]["temperature"],
-                    # "max_tokens": settings["settings"]["max_tokens"],  # or max_decode_steps ?
+                    "temperature": settings["settings"]["temperature"],
+                    "max_tokens": settings["settings"]["max_tokens"],  # or max_decode_steps ?
                 },
             },
         }
