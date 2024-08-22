@@ -106,6 +106,12 @@ class Method:  # pylint: disable=E1101,R0903,W0201
         except AttributeError:
             service_account_info = service_account_info.unsecret(None)
         #
+        model_parameters = {}
+        #
+        for param in ["max_tokens", "temperature", "top_p", "top_k"]:
+            if param in settings.merged_settings:
+                model_parameters[param] = settings.merged_settings[param]
+        #
         if isinstance(data, list):
             data = json.loads(json.dumps(data))
         #
@@ -132,8 +138,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_args": None,
                 "target_kwargs": {
                     "model": settings.merged_settings["model_name"],
-                    "temperature": settings.merged_settings["temperature"],
-                    "max_tokens": settings.merged_settings["max_tokens"],
+                    #
+                    **model_parameters,
                 },
             },
             "target_io_bound": True,
@@ -166,6 +172,12 @@ class Method:  # pylint: disable=E1101,R0903,W0201
         except AttributeError:
             service_account_info = service_account_info.unsecret(None)
         #
+        model_parameters = {}
+        #
+        for param in ["max_tokens", "temperature", "top_p", "top_k"]:
+            if param in settings.merged_settings:
+                model_parameters[param] = settings.merged_settings[param]
+        #
         result = {
             "routing_key": None,
             #
@@ -179,8 +191,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_args": None,
                 "target_kwargs": {
                     "model": settings.merged_settings["model_name"],
-                    "temperature": settings.merged_settings["temperature"],
-                    "max_tokens": settings.merged_settings["max_tokens"],
+                    #
+                    **model_parameters,
                 },
             },
             "target_io_bound": True,
@@ -209,6 +221,12 @@ class Method:  # pylint: disable=E1101,R0903,W0201
         except AttributeError:
             service_account_info = service_account_info.unsecret(None)
         #
+        model_parameters = {}
+        #
+        for param in ["max_tokens", "temperature", "top_p", "top_k"]:
+            if param in settings.merged_settings:
+                model_parameters[param] = settings.merged_settings[param]
+        #
         result = {
             "routing_key": None,
             #
@@ -222,8 +240,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_args": None,
                 "target_kwargs": {
                     "model": settings.merged_settings["model_name"],
-                    "temperature": settings.merged_settings["temperature"],
-                    "max_tokens": settings.merged_settings["max_tokens"],
+                    #
+                    **model_parameters,
                     #
                     "streaming": True,
                 },
@@ -259,6 +277,12 @@ class Method:  # pylint: disable=E1101,R0903,W0201
         except AttributeError:
             service_account_info = service_account_info.unsecret(None)
         #
+        model_parameters = {}
+        #
+        for param in ["max_tokens", "temperature", "top_p", "top_k"]:
+            if param in settings.merged_settings:
+                model_parameters[param] = settings.merged_settings[param]
+        #
         result = {
             "routing_key": None,
             #
@@ -272,8 +296,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_args": None,
                 "target_kwargs": {
                     "model": settings.merged_settings["model_name"],
-                    "temperature": settings.merged_settings["temperature"],
-                    "max_tokens": settings.merged_settings["max_tokens"],
+                    #
+                    **model_parameters,
                 },
             },
             "target_io_bound": True,
@@ -302,6 +326,12 @@ class Method:  # pylint: disable=E1101,R0903,W0201
         except AttributeError:
             service_account_info = service_account_info.unsecret(None)
         #
+        model_parameters = {}
+        #
+        for param in ["max_tokens", "temperature", "top_p", "top_k"]:
+            if param in settings.merged_settings:
+                model_parameters[param] = settings.merged_settings[param]
+        #
         result = {
             "routing_key": None,
             #
@@ -315,8 +345,8 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_args": None,
                 "target_kwargs": {
                     "model": settings.merged_settings["model_name"],
-                    "temperature": settings.merged_settings["temperature"],
-                    "max_tokens": settings.merged_settings["max_tokens"],
+                    #
+                    **model_parameters,
                     #
                     "streaming": True,
                 },
@@ -450,6 +480,12 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 },
             }
         #
+        model_parameters = {}
+        #
+        for param in ["max_tokens", "temperature", "top_p", "top_k"]:
+            if param in settings["settings"]:
+                model_parameters[param] = settings["settings"][param]
+        #
         if not model_info["capabilities"]["chat_completion"]:
             return {
                 "ai_model": "plugins.vertex_ai_worker.utils.proxy.CredentialsProxy",
@@ -463,8 +499,7 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                     "target_kwargs": {
                         "model": model,
                         #
-                        "temperature": settings["settings"]["temperature"],
-                        "max_tokens": settings["settings"]["max_tokens"],  # or max_decode_steps ?
+                        **model_parameters,
                     },
                 },
             }
@@ -481,8 +516,7 @@ class Method:  # pylint: disable=E1101,R0903,W0201
                 "target_kwargs": {
                     "model": model,
                     #
-                    "temperature": settings["settings"]["temperature"],
-                    "max_tokens": settings["settings"]["max_tokens"],  # or max_decode_steps ?
+                    **model_parameters,
                 },
             },
         }
