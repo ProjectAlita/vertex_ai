@@ -22,7 +22,7 @@ import json
 from pylon.core.tools import log  # pylint: disable=E0611,E0401,W0611
 from pylon.core.tools import web  # pylint: disable=E0611,E0401,W0611
 
-from plugins.integrations.models.pd.integration import SecretField  # pylint: disable=E0401
+from tools import worker_client  # pylint: disable=E0401
 
 
 class Method:  # pylint: disable=E1101,R0903,W0201
@@ -96,15 +96,15 @@ class Method:  # pylint: disable=E1101,R0903,W0201
             self, settings, data,
         ):
         """ Count input/output/data tokens """
-        service_account_info = SecretField.parse_obj(
-            settings.merged_settings["service_account_info"]
-        )
+        #
         try:
-            service_account_info = service_account_info.unsecret(
-                settings.integration.project_id
-            )
+            project_id = settings.integration.project_id
         except AttributeError:
-            service_account_info = service_account_info.unsecret(None)
+            project_id = None
+        #
+        service_account_info = worker_client.unsecret_data(
+            settings.merged_settings["service_account_info"], project_id
+        )
         #
         model_parameters = {}
         #
@@ -162,15 +162,15 @@ class Method:  # pylint: disable=E1101,R0903,W0201
             self, settings, text,
         ):
         """ Call model """
-        service_account_info = SecretField.parse_obj(
-            settings.merged_settings["service_account_info"]
-        )
+        #
         try:
-            service_account_info = service_account_info.unsecret(
-                settings.integration.project_id
-            )
+            project_id = settings.integration.project_id
         except AttributeError:
-            service_account_info = service_account_info.unsecret(None)
+            project_id = None
+        #
+        service_account_info = worker_client.unsecret_data(
+            settings.merged_settings["service_account_info"], project_id
+        )
         #
         model_parameters = {}
         #
@@ -211,15 +211,15 @@ class Method:  # pylint: disable=E1101,R0903,W0201
             self, settings, text, stream_id,
         ):
         """ Stream model """
-        service_account_info = SecretField.parse_obj(
-            settings.merged_settings["service_account_info"]
-        )
+        #
         try:
-            service_account_info = service_account_info.unsecret(
-                settings.integration.project_id
-            )
+            project_id = settings.integration.project_id
         except AttributeError:
-            service_account_info = service_account_info.unsecret(None)
+            project_id = None
+        #
+        service_account_info = worker_client.unsecret_data(
+            settings.merged_settings["service_account_info"], project_id
+        )
         #
         model_parameters = {}
         #
@@ -267,15 +267,15 @@ class Method:  # pylint: disable=E1101,R0903,W0201
             self, settings, messages,
         ):
         """ Call model """
-        service_account_info = SecretField.parse_obj(
-            settings.merged_settings["service_account_info"]
-        )
+        #
         try:
-            service_account_info = service_account_info.unsecret(
-                settings.integration.project_id
-            )
+            project_id = settings.integration.project_id
         except AttributeError:
-            service_account_info = service_account_info.unsecret(None)
+            project_id = None
+        #
+        service_account_info = worker_client.unsecret_data(
+            settings.merged_settings["service_account_info"], project_id
+        )
         #
         model_parameters = {}
         #
@@ -316,15 +316,15 @@ class Method:  # pylint: disable=E1101,R0903,W0201
             self, settings, messages, stream_id,
         ):
         """ Stream model """
-        service_account_info = SecretField.parse_obj(
-            settings.merged_settings["service_account_info"]
-        )
+        #
         try:
-            service_account_info = service_account_info.unsecret(
-                settings.integration.project_id
-            )
+            project_id = settings.integration.project_id
         except AttributeError:
-            service_account_info = service_account_info.unsecret(None)
+            project_id = None
+        #
+        service_account_info = worker_client.unsecret_data(
+            settings.merged_settings["service_account_info"], project_id
+        )
         #
         model_parameters = {}
         #
@@ -454,15 +454,14 @@ class Method:  # pylint: disable=E1101,R0903,W0201
         if model_info is None:
             raise RuntimeError(f"No model info found: {model}")
         #
-        service_account_info = SecretField.parse_obj(
-            settings["settings"]["service_account_info"]
-        )
         try:
-            service_account_info = service_account_info.unsecret(
-                settings["project_id"]
-            )
-        except KeyError:
-            service_account_info = service_account_info.unsecret(None)
+            project_id = settings["project_id"]
+        except (AttributeError, KeyError):
+            project_id = None
+        #
+        service_account_info = worker_client.unsecret_data(
+            settings["settings"]["service_account_info"], project_id
+        )
         #
         if model_info["capabilities"]["embeddings"]:
             return {
