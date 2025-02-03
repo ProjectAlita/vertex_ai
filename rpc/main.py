@@ -5,7 +5,7 @@ from pylon.core.tools import web, log
 import json
 
 from tools import rpc_tools, worker_client, this
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from google.oauth2.service_account import Credentials
 from google.cloud import aiplatform
