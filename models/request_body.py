@@ -2,7 +2,7 @@ import json
 from typing import List, Optional, Union
 
 from vertexai.language_models import InputOutputTextPair, ChatMessage
-from pydantic import BaseModel, root_validator, validator
+from pydantic.v1 import BaseModel, root_validator, validator
 from pylon.core.tools import log
 
 
