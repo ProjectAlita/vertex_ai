@@ -18,7 +18,7 @@ from pylon.core.tools import log
 
 def init_vertex(project_id: int, settings: IntegrationModel) -> None:
     reload(vertexai.preview.initializer)
-    # service_account = SecretField.parse_obj(settings.service_account_info)
+    # service_account = SecretString(settings.service_account_info)
     # service_info = json.loads(service_account.unsecret(project_id))
     # credentials = Credentials.from_service_account_info(service_info)
     service_account_json = json.loads(settings.service_account_info.unsecret(project_id))

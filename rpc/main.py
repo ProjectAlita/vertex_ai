@@ -4,7 +4,7 @@ from traceback import format_exc
 from pylon.core.tools import web, log
 import json
 
-from tools import rpc_tools, worker_client, this
+from tools import rpc_tools, worker_client, this, SecretString
 from pydantic.v1 import ValidationError
 
 from google.oauth2.service_account import Credentials
@@ -12,7 +12,6 @@ from google.cloud import aiplatform
 
 from ..models.integration_pd import VertexAISettings, AIModel
 from ..utils import predict_chat, predict_from_request, predict_text, prepare_result, predict_chat_from_request
-from ...integrations.models.pd.integration import SecretField
 
 
 class RPC:
@@ -80,10 +79,10 @@ class RPC:
     def set_models(self, payload: dict):
         api_token = payload['settings'].get('service_account_info', {})
         #
-        if isinstance(api_token, SecretField):
+        if isinstance(api_token, SecretString):
             token_field = api_token
         else:
-            token_field = SecretField.parse_obj(api_token)
+            token_field = SecretString(api_token)
         #
         api_token = token_field.unsecret(payload.get('project_id'))
         #

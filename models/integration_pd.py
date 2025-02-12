@@ -4,8 +4,7 @@ from typing import List, Optional, Union
 from pydantic.v1 import BaseModel, root_validator, validator
 from pylon.core.tools import log
 
-from tools import session_project, rpc_tools, VaultClient, worker_client, this
-from ...integrations.models.pd.integration import SecretField
+from tools import session_project, rpc_tools, VaultClient, worker_client, this, SecretString
 
 
 def get_token_limits():
@@ -40,7 +39,7 @@ class AIModel(BaseModel):
 
 
 class IntegrationModel(BaseModel):
-    service_account_info: Union[SecretField, str]
+    service_account_info: Union[SecretString, str]
     project: str
     zone: str
     models: List[AIModel] = []
