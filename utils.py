@@ -8,6 +8,7 @@ from typing import Any
 from .models.integration_pd import IntegrationModel, MessageModel
 from .models.request_body import ChatCompletionRequestBody, CompletionRequestBody
 
+from google.cloud import aiplatform
 import vertexai
 from vertexai.language_models import ChatModel, InputOutputTextPair, TextGenerationModel, TextGenerationResponse, ChatMessage
 from google.oauth2.service_account import Credentials

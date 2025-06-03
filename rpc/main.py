@@ -1,14 +1,9 @@
-# from importlib import reload
 from traceback import format_exc
 
 from pylon.core.tools import web, log
-import json
 
 from tools import rpc_tools, worker_client, this, SecretString
 from pydantic.v1 import ValidationError
-
-# from google.oauth2.service_account import Credentials
-# from google.cloud import aiplatform
 
 from ..models.integration_pd import VertexAISettings, AIModel
 
