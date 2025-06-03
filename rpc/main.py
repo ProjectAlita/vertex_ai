@@ -11,7 +11,6 @@ from google.oauth2.service_account import Credentials
 from google.cloud import aiplatform
 
 from ..models.integration_pd import VertexAISettings, AIModel
-from ..utils import predict_chat, predict_from_request, predict_text, prepare_result, predict_chat_from_request
 
 
 class RPC:
@@ -20,6 +19,8 @@ class RPC:
     @web.rpc(f'{integration_name}__predict')
     @rpc_tools.wrap_exceptions(RuntimeError)
     def predict(self, project_id: int, settings: dict, prompt_struct: dict):
+        from ..utils import predict_chat, predict_text, prepare_result  # pylint: disable=C0415
+        #
         models = settings.get('models', [])
         capabilities = next((model['capabilities'] for model in models if model['id'] == settings['model_name']), {})
         """ Predict function """
@@ -43,9 +44,10 @@ class RPC:
     @rpc_tools.wrap_exceptions(RuntimeError)
     def chat_completion(self, project_id, settings, request_data):
         """ Chat completion function """
+        from ..utils import predict_chat_from_request  # pylint: disable=C0415
+        #
         try:
             result = predict_chat_from_request(project_id, settings, request_data)
-
         except Exception as e:
             log.error(format_exc())
             return {"ok": False, "error": f"{type(e)}: {str(e)}"}
@@ -56,6 +58,8 @@ class RPC:
     @rpc_tools.wrap_exceptions(RuntimeError)
     def completion(self, project_id, settings, request_data):
         """ Completion function """
+        from ..utils import predict_from_request  # pylint: disable=C0415
+        #
         try:
             result = predict_from_request(project_id, settings, request_data)
 
